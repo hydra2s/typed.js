@@ -29,7 +29,7 @@ const StructExample = new Proxy(CStructView, new CStruct("StructExample", {
 
 const structed = new Types["StructExample"]({
     memberArr: [0, 0],
-    member: 0
+    member: 0,
     memberVec2: {x: 0, y: 0}
 });
 

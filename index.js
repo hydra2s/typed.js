@@ -583,7 +583,13 @@ class CStruct extends TypePrototype {
 
     offsetof(name) {
         this.gerenateTypeTable();
-        return (this.types.find((e)=>(e.name==name)) || this)?.byteOffset || 0;
+        if (IsNumber(name)) { // panty
+            return parseIntFix(name) * this.byteLength;
+        } else 
+        if (typeof name == "string") { // stringy
+            return (this.types.find((e)=>(e.name==name)) || this)?.byteOffset || 0;
+        }
+        return 0;
     }
 
     // 

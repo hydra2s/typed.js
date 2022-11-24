@@ -62,7 +62,7 @@ class TypePrototype {
         let dfv = null;
         let type = null;
 
-        if ((typeof tname == "object" || typeof tname == "function") && tname.type) {
+        if ((typeof tname == "object" || typeof tname == "function") && tname._type) {
             type = tname;
         } else
 
@@ -118,7 +118,7 @@ class TypePrototype {
             }
         } else {
             if (index == "prototype") { return Target.prototype; };
-            if (index == "type") { return this.type; };
+            if (index == "_type") { return this._type; };
             if (index == "fromAddress") { return Target[index] ? Target[index].fromAddress(Target) : this[index].bind(this); }
             if (index == "byteLength") { return this.byteLength; };
         }
@@ -201,7 +201,7 @@ class NumberAccessor extends TypePrototype {
         super();
 
         if (!(name in Types)) { Types[name] = new Proxy(this._class = construct_, this); };
-        this.type = name;
+        this._type = name;
         this.bigEndian = bigEndian;
         this._get = get;//.bind(this);
         this._set = set;//.bind(this);
@@ -233,7 +233,7 @@ class ArrayAccessor extends TypePrototype {
         super();
 
         if (!((name+"[arr]") in Types)) { Types[name+"[arr]"] = new Proxy(this._class = construct_, this); };
-        this.type = name+"[arr]";
+        this._type = name+"[arr]";
         this.bigEndian = bigEndian;
         this._get = (...args) => { return get.bind(this)(...args);/*IsNumber(args[1]) ? get.bind(this)(...args) : new Proxy(args[0], this)*/; }
         this._set = (...args) => { return set.bind(this)(...args); /*return new Proxy(args[0], this);*/ }
@@ -313,7 +313,7 @@ new NumberAccessor("u64", 8, (dv, offset=0)=>{ return dv.getBigUint64(parseIntFi
 new NumberAccessor("i64", 8, (dv, offset=0)=>{ return dv.getBigInt64(parseIntFix(offset)||0, true); }, (dv, offset, value)=>{ dv.setBigInt64(parseIntFix(offset)||0, AsBigInt(value), true); return true; });
 new NumberAccessor("u24", 3, 
 (dv, offset=0)=>{ return (dv.getUint8(parseIntFix(offset)||0, true)|(dv.getUint8((parseIntFix(offset)||0)+1, true)<<8)|(dv.getUint8((parseIntFix(offset)||0)+2, true)<<16)); }, 
-(dv, offset, value)=>{ dv.setUint8(parseIntFix(offset)||0, (parseIntFix(value) & 0xFF), true); dv.setUint8((parseIntFix(offset)||0)+1, (parseIntFix(value) >> 8) & 0xFF, true); dv.setUint8((parseIntFix(offset)||0)+2, (parseIntFix(value) >> 16) & 0xFF, true); });
+(dv, offset, value)=>{ dv.setUint8(parseIntFix(offset)||0, (parseIntFix(value) & 0xFF), true); dv.setUint8((parseIntFix(offset)||0)+1, (parseIntFix(value) >> 8) & 0xFF, true); dv.setUint8((parseIntFix(offset)||0)+2, (parseIntFix(value) >> 16) & 0xFF, true); return true; });
 
 //
 const re64 = (args)=>{
@@ -369,8 +369,8 @@ class CStructView extends TypeView {
         this.buffer = buffer;
         this.byteOffset = byteOffset + struct.byteOffset;
         this.byteLength =     length * struct.byteLength;
-        this.type = struct.type;
-        this.parent = null;
+        this._type = struct._type;
+        this._parent = null;
         this.length = length;
 
         // implicit support for type-casting and setting
@@ -383,11 +383,11 @@ class CStructView extends TypeView {
         });
 
         //
-        (this._class = struct).types.forEach((tp)=>{
+        (this._class = struct)._types.forEach((tp)=>{
             // use F32 fallback for Vulkan API types
             const array = new (tp.type || Types[length > 1 ? "u32[arr]" : "u32"])(this.buffer, this.byteOffset + tp.byteOffset, tp.length);
 
-            //array.parent = this; // prefer to have parent node
+            //array._parent = this; // prefer to have parent node
             Object.defineProperties(this, {
                 [tp.name]: {
                     set: (v)=>{ array[""] = v; },
@@ -411,7 +411,7 @@ class CStructView extends TypeView {
     // fix extra vars problems, make as object and read-only de-facto
     serialize() {
         let obj = {};
-        for (let t of this._class.types) { 
+        for (let t of this._class._types) { 
             obj[t.name] = typeof this[t.name].serialize == "function" ? this[t.name].serialize() : this[t.name];
         };
         return obj;
@@ -436,7 +436,7 @@ class CStructView extends TypeView {
 
             // needs votes and feedback!
             // supports correct order
-            for (let t of this._class.types) { 
+            for (let t of this._class._types) { 
                 let k = t.name, f = keys.indexOf(k), type = types[f];
                 //if (f >= 0) structed[raws[f]] = (buffer[k] || buffer[raws[f]]); // may to assign as is
                 if (f >= 0) structed[raws[f]] = (buffer[raws[f]] || buffer[k]); // may to typecast when getting firstly
@@ -456,17 +456,17 @@ class CStruct extends TypePrototype {
     constructor(name, struct, byteLength) {
         super();
 
-        this.struct = struct;
-        this.type = name;
+        this._struct = struct;
+        this._type = name;
         this.byteOffset = 0;
         this.byteLength = byteLength || 0;
-        this.isStruct = true;
+        this._isStruct = true;
         if (!(name in Types)) { this._class = Types[name] = new Proxy(CStructView, this); };
     }
 
     gerenateTypeTable() {
-        if (!this.types) { this.types = [];
-            const name = this.type, struct = this.struct, byteLength = this.byteLength;
+        if (!this._types) { this._types = [];
+            const name = this._type, struct = this._struct, byteLength = this.byteLength;
             
             let prev = undefined;
             for (let name in struct) {
@@ -512,14 +512,14 @@ class CStruct extends TypePrototype {
                 }
 
                 // correctify offset, if not defined
-                if (!offset && prev != undefined) { offset = this.types[prev].byteOffset + this.types[prev].byteLength; }; 
+                if (!offset && prev != undefined) { offset = this._types[prev].byteOffset + this._types[prev].byteLength; }; 
                 if (!type) { type = Types[tname+(length>1?"[arr]":"")] || Types[tname]; }; // fallback by not-arrayed
 
                 //
-                prev = this.types.length; this.types.push({type, dfv, name, length, byteOffset: offset, byteLength: (type?.byteLength || 1) * length });
+                prev = this._types.length; this._types.push({type, dfv, name, length, byteOffset: offset, byteLength: (type?.byteLength || 1) * length });
 
                 //
-                this.types = this.types.sort(function(a, b) {
+                this._types = this._types.sort(function(a, b) {
                     if (a.byteOffset < b.byteOffset) return -1;
                     if (a.byteOffset > b.byteOffset) return 1;
                     return 0;
@@ -527,8 +527,8 @@ class CStruct extends TypePrototype {
             }
 
             // if length is not defined
-            if (!this.byteLength && this.types.length >= 1) { 
-                this.byteLength = this.types[this.types.length-1].byteOffset + this.types[this.types.length-1].byteLength; 
+            if (!this.byteLength && this._types.length >= 1) { 
+                this.byteLength = this._types[this._types.length-1].byteOffset + this._types[this._types.length-1].byteLength; 
             }
         }
         
@@ -546,7 +546,7 @@ class CStruct extends TypePrototype {
             } else 
             if (typeof index == "string" && index != "") {
                 let type = null; [index, type] = index.vsplit(":");
-                if (index == "" || Target._class.types.find((t)=>(t.name==index))) {
+                if (index == "" || Target._class._types.find((t)=>(t.name==index))) {
                     return type ? Target._as(type, index)[""] : Target[index];
                 }
             }
@@ -564,7 +564,7 @@ class CStruct extends TypePrototype {
             } else
             if (typeof index == "string" && index != "") {
                 let type = null; [index, type] = index.vsplit(":");
-                if (index == "" || Target._class.types.find((t)=>(t.name==index))) {
+                if (index == "" || Target._class._types.find((t)=>(t.name==index))) {
                     if (type) 
                         { Target._as(type, index)[""] = value; } else
                         { Target[index] = value; }
@@ -577,7 +577,7 @@ class CStruct extends TypePrototype {
 
     lengthof(name) {
         this.gerenateTypeTable();
-        let type = this.types.find((e)=>(e.name==name)) || this;
+        let type = this._types.find((e)=>(e.name==name)) || this;
         return (type?.byteLength || 1) / (type?.BYTES_PER_ELEMENT || 1);
     }
 
@@ -587,7 +587,7 @@ class CStruct extends TypePrototype {
             return parseIntFix(name) * this.byteLength;
         } else 
         if (typeof name == "string") { // stringy
-            return (this.types.find((e)=>(e.name==name)) || this)?.byteOffset || 0;
+            return (this._types.find((e)=>(e.name==name)) || this)?.byteOffset || 0;
         }
         return 0;
     }

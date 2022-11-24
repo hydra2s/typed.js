@@ -406,7 +406,6 @@ class CStructView extends TypeView {
         this.address = this.address.bind(this);
     }
 
-    
 
     // fix extra vars problems, make as object and read-only de-facto
     serialize() {
@@ -423,6 +422,15 @@ class CStructView extends TypeView {
 
     //
     set(buffer, offset = 0) {
+        // prefer a proxy
+        let structed = new Proxy(this, this._class);
+
+        //
+        if (Array.isArray(buffer)) {
+            for (let I=0;I<buffer.length;I++) {
+                structed[I] = buffer[I];
+            }
+        } else
         if (typeof buffer == "object") {
             // serialization are required for avoid keys conflicts
             let types = [], raws = [];
@@ -430,9 +438,6 @@ class CStructView extends TypeView {
                 raws.push(k); let names = k.vsplit(":");
                 types.push(names[1]); return names[0];
             });
-
-            // prefer a proxy
-            let structed = new Proxy(this, this._class);
 
             // needs votes and feedback!
             // supports correct order
@@ -605,12 +610,17 @@ class CStruct extends TypePrototype {
         if (typeof buffer == "number") {
             cargs = [new ArrayBuffer((this.byteLength * buffer) || 1), 0, buffer || 1];
         } else 
+        if (Array.isArray(buffer)) {
+            cargs = [new ArrayBuffer((this.byteLength || 1) * (buffer.length || 1)), 0, buffer.length || 1];
+        } else 
         if (typeof buffer == "object") {
             cargs = [new ArrayBuffer(this.byteLength || 1), 0, 1];
-        } else {
+        } else 
+        {
             cargs = [new ArrayBuffer(this.byteLength || 1), 0, 1];
         }
         const result = new Proxy(new CStructView(...cargs, this), this);
+        if (Array.isArray(buffer)) { result.set(buffer); } else
         if (typeof buffer == "object") { result.set(buffer); };
         return result;
     }

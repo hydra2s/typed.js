@@ -130,7 +130,7 @@ class TypePrototype {
         if (!isConstructor(Target)) {
             if (index == "") {
                 if (Target.set) {
-                    Target.set(value);
+                    Target.set(value); return true;
                 }
                 return this._set ? this._set(Target, "", value) : (Target[""] = value);
             } else

@@ -399,6 +399,11 @@ class CStructView extends TypeView {
             // if has default value, but not set already
             if (tp.dfv != undefined && tp.dfv !== null && !this[tp.name]) { 
                 this[tp.name] = tp.dfv;
+
+                if (this.length > 1) {
+                    let structed = new Proxy(this, this._class);
+                    for (let I=1;I<this.length;I++) { if (!structed[I][tp.name]) { structed[I][tp.name] = tp.dfv; } };
+                }
             };
         });
 

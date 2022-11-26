@@ -256,7 +256,7 @@ class ArrayAccessor extends TypePrototype {
     }
 
     construct(Target, args) {
-        return new Proxy(new Target(...this.handler(args)), this);
+        return new Proxy(new Target(...(this.handler ? this.handler(args) : args)), this);
     }
 }
 

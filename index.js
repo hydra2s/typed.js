@@ -235,7 +235,8 @@ class ArrayAccessor extends TypePrototype {
         if (!((name+"[arr]") in Types)) { Types[name+"[arr]"] = new Proxy(this._class = construct_, this); };
         this._type = name+"[arr]";
         this.bigEndian = bigEndian;
-        this._get = (...args) => { return get.bind(this)(...args);/*IsNumber(args[1]) ? get.bind(this)(...args) : new Proxy(args[0], this)*/; }
+        //this._get = (...args) => { return IsNumber(args[1]) ? get.bind(this)(...args) : new Proxy(args[0], this); }
+        this._get = (...args) => { return IsNumber(args[1]) ? get.bind(this)(...args) : new Proxy(args[0], this); }
         this._set = (...args) => { return set.bind(this)(...args); /*return new Proxy(args[0], this);*/ }
         this.byteLength = byteLength;
         this.handler = handler;

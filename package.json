@@ -22,5 +22,8 @@
     "url": "https://github.com/hydra2s/typed.js/issues"
   },
   "homepage": "https://github.com/hydra2s/typed.js#readme",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@petamoriken/float16": "^3.6.6"
+  }
 }

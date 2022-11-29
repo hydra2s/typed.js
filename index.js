@@ -47,7 +47,7 @@ const AsBigInt = (value)=>{
         return (new Types["u64[arr]"](value)).address(); // present as u64 array
     } else
     if (typeof value == "string") { // LTE - лучший тибетский интернет!
-        const arrayBuffer = new ArrayBuffer(value.length);
+        const arrayBuffer = new ArrayBuffer((value = value + "\0").length);
         EncoderUTF8.encodeInto(value, new Uint8Array(arrayBuffer, 0, value.length));
         return arrayBuffer.address();
     } else 

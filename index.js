@@ -1,4 +1,11 @@
 //
+import {
+    Float16Array, isFloat16Array, isTypedArray,
+    getFloat16, setFloat16,
+    hfround,
+} from "@petamoriken/float16";
+
+//
 const isAbv = (value) => {
     return value && value.byteLength != undefined && (value instanceof ArrayBuffer);
 }
@@ -304,6 +311,7 @@ const setBigInt = (Target, index = 0, value = 0n) => {
 // default accessor types
 new NumberAccessor("u8", 1, (dv, offset=0)=>{ return dv.getUint8(parseIntFix(offset)||0, true); }, (dv, offset, value)=>{ dv.setUint8(parseIntFix(offset)||0, parseIntFix(value), true); return true; });
 new NumberAccessor("i8", 1, (dv, offset=0)=>{ return dv.getInt8(parseIntFix(offset)||0, true); }, (dv, offset, value)=>{ dv.setInt8(parseIntFix(offset)||0, parseIntFix(value), true); return true; });
+new NumberAccessor("f16", 2, (dv, offset=0)=>{ return dv.getFloat16(parseIntFix(offset)||0, true); }, (dv, offset, value)=>{ dv.setFloat16(parseIntFix(offset)||0, parseFloatFix(value), true); return true; });
 new NumberAccessor("u16", 2, (dv, offset=0)=>{ return dv.getUint16(parseIntFix(offset)||0, true); }, (dv, offset, value)=>{ dv.setUint16(parseIntFix(offset)||0, parseIntFix(value), true); return true; });
 new NumberAccessor("i16", 2, (dv, offset=0)=>{ return dv.getInt16(parseIntFix(offset)||0, true); }, (dv, offset, value)=>{ dv.setInt16(parseIntFix(offset)||0, parseIntFix(value), true); return true; });
 new NumberAccessor("f32", 4, (dv, offset=0)=>{ return dv.getFloat32(parseIntFix(offset)||0, true); }, (dv, offset, value)=>{ dv.setFloat32(parseIntFix(offset)||0, parseFloatFix(value), true); return true; });
@@ -353,6 +361,7 @@ const ref = (args)=>{
 // default array types
 new ArrayAccessor("u8", 1, getInt, setInt, Uint8Array, rei);
 new ArrayAccessor("i8", 1, getInt, setInt, Int8Array, rei);
+new ArrayAccessor("f16", 2, getInt, setInt, Float16Array, ref);
 new ArrayAccessor("u16", 2, getInt, setInt, Uint16Array, rei);
 new ArrayAccessor("i16", 2, getInt, setInt, Int16Array, rei);
 new ArrayAccessor("f32", 4, getFloat, setFloat, Float32Array, ref);
@@ -527,7 +536,7 @@ class CStruct extends TypePrototype {
                 if (!type) { type = Types[tname+(length>1?"[arr]":"")] || Types[tname]; }; // fallback by not-arrayed
 
                 //
-                prev = this._types.length; this._types.push({type, dfv, name, length, byteOffset: offset, byteLength: (type?.byteLength || 1) * length });
+                prev = this._types.length; this._types.push({type, dfv, name, length, byteOffset: offset, byteLength: (type?.byteLength || type?.BYTES_PER_ELEMENT || 1) * length });
 
                 //
                 this._types = this._types.sort(function(a, b) {

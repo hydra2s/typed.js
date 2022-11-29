@@ -171,7 +171,7 @@ class TypeView {
 }
 
 // Black Jack
-let classes = [DataView, Uint8Array, Uint16Array, Uint32Array, BigUint64Array, Int8Array, Int16Array, Int32Array, BigInt64Array, Float32Array, Float64Array];
+let classes = [DataView, Uint8Array, Float16Array, Uint16Array, Uint32Array, BigUint64Array, Int8Array, Int16Array, Int32Array, BigInt64Array, Float32Array, Float64Array];
 classes.map((C)=>{
     Object.defineProperty(C, "_class", { get() { return new TypePrototype(); }, configurable: true });
     Object.defineProperty(C.prototype, "_class", { get() { return new TypePrototype(); }, configurable: true });

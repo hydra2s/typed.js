@@ -137,7 +137,13 @@ class TypePrototype {
         if (!isConstructor(Target)) {
             if (index == "") {
                 if (Target.set) {
-                    Target.set(value); return true;
+                    // I not able to avoid the LAVA
+                    try {
+                        Target.set(value); return true;
+                    } catch(e) {
+                        //console.warn(e);
+                        return true;
+                    }
                 }
                 return this._set ? this._set(Target, "", value) : (Target[""] = value);
             } else

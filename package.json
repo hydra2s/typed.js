@@ -1,5 +1,5 @@
 {
-  "name": "typed",
+  "name": "@hydra2s/typed.js",
   "version": "1.0.0",
   "description": "Typed Structs for JS binary data",
   "main": "index.js",

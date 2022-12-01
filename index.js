@@ -181,7 +181,7 @@ let classes = [DataView, Uint8Array, Float16Array, Uint16Array, Uint32Array, Big
 classes.map((C)=>{
     Object.defineProperty(C, "_class", { get() { return new TypePrototype(); }, configurable: true });
     Object.defineProperty(C.prototype, "_class", { get() { return new TypePrototype(); }, configurable: true });
-    ["addressOffsetOf", "bufferOffsetOf", "as"].map((N)=>(C.prototype[N]=TypeView.prototype[N]));
+    ["addressOffsetOf", "bufferOffsetOf", "as", "_as"].map((N)=>(C.prototype[N]=TypeView.prototype[N]));
     C.prototype.offsetof = function (index = 0) { return index * (this.BYTES_PER_ELEMENT || 0); };
 });
 

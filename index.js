@@ -648,4 +648,4 @@ class CStruct extends TypePrototype {
 }
 
 //
-export default { CStruct, CStructView, Types, ConstructProxy, AsBigInt, EncoderUTF8 };
+export default { CStruct, CStructView, Types, ConstructProxy, AsBigInt, IsNumber, EncoderUTF8 };
